@@ -167,14 +167,11 @@ function atributos(feature, layer) {
         } else {
             obs = feature.properties["Obs_Vdigit"]
         }
-
-/*
-        sidebar.setContent("<div>Nº de Ordem: " + feature.properties.NO_1 + "<br>Fólio: " + feature.properties.Folio + "<br><b>Topónimos:</b> <br>&nbsp;&nbsp;&nbsp;Códice: " + feature.properties.Top_Orig + "<br>&nbsp;&nbsp;&nbsp;S. Daveau: " + feature.properties.Top_SD + "<br>&nbsp;&nbsp;&nbsp;Atual: " + feature.properties.Top_Atual + "<br>Distrito: " + feature.properties.Distrito + "<br>Concelho: " + feature.properties.Concelho + "<br>Freguesia: " + feature.properties.Freguesia + "<br>Nota: " + obs); //feature.properties.Obs_Vdigit);
-*/
-/*
+        //Aramazena as coordenadas contidas nas propriedades em variáveis para serem aatribuídas ao L.circleMarker
+        var lat = feature.geometry.coordinates[1];
+        var long = feature.geometry.coordinates[0];
         if (realce == null) {
-            //realce = L.circleMarker([feature.properties.LAT, feature.properties.LONG], {
-            realce = L.circleMarker(latlng, {
+            realce = L.circleMarker([lat, long], {
                 "radius": 15,
                 "fillColor": "#9c5f1f",
                 "color": "red",
@@ -182,13 +179,18 @@ function atributos(feature, layer) {
                 "opacity": 1
             }).addTo(map);
         } else {
-            //realce.setLatLng([feature.properties.LAT, feature.properties.LONG]);
-            realce.setLatLng(latlng);
+            //se já existir, apenas muda de sítio
+            realce.setLatLng([lat, long]);
         }
-*/
 //        sidebar.show();
-        document.getElementById('toponimo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "<br>Fólio: " + feature.properties.Folio + "<br><br><b>Topónimos:</b> <br>&nbsp;&nbsp;&nbsp;Códice: " + feature.properties.Top_Orig + "<br>&nbsp;&nbsp;&nbsp;S. Daveau: " + feature.properties.Top_SD + "<br>&nbsp;&nbsp;&nbsp;Atual: " + feature.properties.Top_Atual + "<br><br>Distrito: " + feature.properties.Distrito + "<br>Concelho: " + feature.properties.Concelho + "<br>Freguesia: " + feature.properties.Freguesia + "<br><br>Nota: " + obs;
+        /*document.getElementById('toponimo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "<br>Fólio: " + feature.properties.Folio + "<br><br><b>Topónimos:</b> <br>&nbsp;&nbsp;&nbsp;Códice: " + feature.properties.Top_Orig + "<br>&nbsp;&nbsp;&nbsp;S. Daveau: " + feature.properties.Top_SD + "<br>&nbsp;&nbsp;&nbsp;Atual: " + feature.properties.Top_Atual + "<br><br>Distrito: " + feature.properties.Distrito + "<br>Concelho: " + feature.properties.Concelho + "<br>Freguesia: " + feature.properties.Freguesia + "<br><br>Nota: " + obs;*/
+        document.getElementById('topInfo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "&nbsp;&nbsp;&nbsp;Fólio: " + feature.properties.Folio + "</p><p>Topónimos :</p></div>";
+        document.getElementById("tablePonto").innerHTML = "<td><p>Códice: " + feature.properties.Top_Orig + "</p><p>S.Daveau: " + feature.properties.Top_SD + "</p><p>Atual: " + feature.properties.Top_Atual + "</p></td><td><p>Distrito: " + feature.properties.Distrito + "</p><p>Concelho: " + feature.properties.Concelho + "</p><p>Freguesia: " + feature.properties.Freguesia + "</p></td>";
+        document.getElementById("botInfo").innerHTML = "<p>Notas: " + obs + "</p>";
+
+
         //removeLugLayer();
+
       }
   });
   dist.push(feature.properties.Distrito);
@@ -211,13 +213,11 @@ function atributos_filter(feature, layer) {
         } else {
           obs = feature.properties["Obs_Vdigit"]
         }
-        var circle = L.circle(latLng, {radius: 200}).addTo(map);
-
-/*
+        //Aramazena as coordenadas contidas nas propriedades em variáveis para serem aatribuídas ao L.circleMarker
+        var lat = feature.geometry.coordinates[1];
+        var long = feature.geometry.coordinates[0];
         if (realce == null) {
-            //realce = L.circleMarker([feature.properties.LAT, feature.properties.LONG], {
-
-            L.circleMarker(LatLng, {
+            realce = L.circleMarker([lat, long], {
                 "radius": 15,
                 "fillColor": "#9c5f1f",
                 "color": "red",
@@ -225,25 +225,15 @@ function atributos_filter(feature, layer) {
                 "opacity": 1
             }).addTo(map);
         } else {
-            //realce.setLatLng([feature.properties.LAT, feature.properties.LONG]);
-            realce.setLatLng(latlng);
-        }*/
-        document.getElementById('toponimo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "<br>Fólio: " + feature.properties.Folio + "<br><br><b>Topónimos:</b> <br>&nbsp;&nbsp;&nbsp;Códice: " + feature.properties.Top_Orig + "<br>&nbsp;&nbsp;&nbsp;S. Daveau: " + feature.properties.Top_SD + "<br>&nbsp;&nbsp;&nbsp;Atual: " + feature.properties.Top_Atual + "<br><br>Distrito: " + feature.properties.Distrito + "<br>Concelho: " + feature.properties.Concelho + "<br>Freguesia: " + feature.properties.Freguesia + "<br><br>Nota: " + obs;
-      }/*,
-      pointToLayer: function(feature, latlng){
-        alert(realce);
-        alert(feature.latLng);
-      //Cria marcas em todos
-        return new L.circleMarker(latlng, {
+            //se já existir, apenas muda de sítio
+            realce.setLatLng([lat, long]);
+        }
+        //document.getElementById('toponimo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "<br>Fólio: " + feature.properties.Folio + "<br><br><b>Topónimos:</b> <br>&nbsp;&nbsp;&nbsp;Códice: " + feature.properties.Top_Orig + "<br>&nbsp;&nbsp;&nbsp;S. Daveau: " + feature.properties.Top_SD + "<br>&nbsp;&nbsp;&nbsp;Atual: " + feature.properties.Top_Atual + "<br><br>Distrito: " + feature.properties.Distrito + "<br>Concelho: " + feature.properties.Concelho + "<br>Freguesia: " + feature.properties.Freguesia + "<br><br>Nota: " + obs;
+        document.getElementById('topInfo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "&nbsp;&nbsp;&nbsp;Fólio: " + feature.properties.Folio + "</p><p>Topónimos :</p></div>";
+        document.getElementById("tablePonto").innerHTML = "<td><p>Códice: " + feature.properties.Top_Orig + "</p><p>S.Daveau: " + feature.properties.Top_SD + "</p><p>Atual: " + feature.properties.Top_Atual + "</p></td><td><p>Distrito: " + feature.properties.Distrito + "</p><p>Concelho: " + feature.properties.Concelho + "</p><p>Freguesia: " + feature.properties.Freguesia + "</p></td>";
+        document.getElementById("botInfo").innerHTML = "<p>Notas: " + obs + "</p>";
 
-            "radius": 15,
-            "fillColor": "#9c5f1f", //"#012999",
-            "color": "red", //"#874703", //"#012999",
-            "weight": 1,
-            "opacity": 1
-        })
-
-    }*/
+      }
   });
   dist.push(feature.properties.Distrito);
   conc.push(feature.properties.Concelho);
@@ -553,44 +543,35 @@ if (map.hasLayer(lugar)) {
     //realcelugar = null;
 }
 //Limpa o realce
-/*if (realce != null) {
+if (realce != null) {
     map.removeLayer(realce);
     realce = null;
-}*/
+}
   //Número de Ordem
   var nordem = document.getElementById("jsoncontent").rows[x.rowIndex].cells.item(0).innerHTML;
-/*
-  lugs = L.geoJSON(toponimos, {
-    filter: function (feature, layer) {
-      if (feature.properties.NO_1 == nordem) return true
-    },
-    onEachFeature: atributos_filter
-  });
-  map.addLayer(lugs);
-  map.fitBounds(lugs.getBounds())
-*/
-
   lugar = L.geoJSON(toponimos, {
     filter: function(feature, layer) {
       if (feature.properties.NO_1 == nordem) return true
     },
     pointToLayer: function(feature, latlng){
     //Cria marcas em todos
-      return new L.circleMarker(latlng, {
-          "radius": 15,
-          "fillColor": "#9c5f1f", //"#012999",
-          "color": "red", //"#874703", //"#012999",
-          "weight": 1,
-          "opacity": 1
-      });
+        if (realce == null) {
+            realce = L.circleMarker(latlng, {
+                "radius": 15,
+                "fillColor": "#9c5f1f",
+                "color": "red",
+                "weight": 1,
+                "opacity": 1
+            }).addTo(map);
+        } else {
+            //se já existir, apenas muda de sítio
+            realce.setLatLng(latlng);
+        }
+
     }
   });
   map.addLayer(lugar);
   map.fitBounds(lugar.getBounds());
-  //var latlng = L.latLng(latlngs[0]);
-  //map.flyTo(latlng);
-
-
 }
 
 function sortTable() {
