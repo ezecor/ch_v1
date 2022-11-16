@@ -16,14 +16,8 @@
 //7.8 removeLugLayer() : remove o layer de lugares seleccionados
 
 // -------------
-var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
-});
 var osm_mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-});
-var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
 });
 // ------------
 var map = L.map('mapCanvas', {
@@ -32,54 +26,23 @@ var map = L.map('mapCanvas', {
   maxZoom: 14,
   layers: [osm_mapnik]
 });
-var baseMaps = {
-  "CartoDB": CartoDB_Positron,
-  "OpenStreetMap": osm_mapnik,
-  "Satélite": Esri_WorldImagery
-};
-L.control.layers(baseMaps, null, {
-  collapsed: false
-}).addTo(map);
-/*
-var sidebar = L.control.sidebar('sidebar', {
-  closeButton: true,
-  position: 'left'
-});
-*/
-
-//map.addControl(sidebar);
-
 //----- VARIÁVEIS GLOBAIS
 var counter = 0; // nº de elementos seleccionados
 var dist = []; // array com o nome dos distritos
 var conc = []; // array com o nome dos concelhos
-//var freg = [];
-var lugar = L.featureGroup();
-//var markers;
-var realce = null; // para construir um layer coma seleçã
-//var foto;
+var lugar = L.featureGroup(); // layer group para conter o ponto seleccionado na tabela
 var lugs = L.featureGroup(); // layer group para conter os pontos seleccionados
 var lugsel = false; // boleano para controlar a existência de lugares seleccionados
-
+var realce = null; // para construir um layer coma seleçã
 // variáveis para conter o nome do distrito ou do concelho que for seleccionado
 var miDist = document.getElementById('selbx_dist').value;
 var miConc = document.getElementById('selbx_conc').value;
+var letraSel;
 //-------------- carregamento do ficheiro geojson
 var geojson = L.geoJSON(toponimos, {
   //vai ler os atributos para a tooltip
   onEachFeature: atributos,
   // altera o estilo das marcas
-  //1-Circulo: permite a atribuição do raio em metros e, assim, o raio ajusta-se ao nível do zoom (problema: pode ficar demasiado grande quando se amplia)
-  /*
-  pointToLayer: function(feature, latlng) {
-      return L.circle(latlng, 1000, {
-          fillColor: '#708598',
-          color: '#537898',
-          //radius: 30,
-          weight: 1,
-          fillOpacity: 0.6
-      })
-  }*/
   //2- Com CircleMarker; o raio é dado em pixeis e permanece fixo, não se ajusta ao zoom
   pointToLayer: function(feature, latlng) {
     return L.circleMarker (latlng, {
@@ -146,13 +109,6 @@ L.control.scale({
 map.attributionControl.setPrefix(
   '&copy; <a href="https://sites.google.com/view/alminhas">Projecto Alminhas</a>' + ' &copy; Mapa Interactivo: <a href="mailto:ezcorreia@gmail.com">Ezequiel Correia</a> | <a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>'
 );
-//Side bar
-/*
-sidebar.on('hidden', function () {
-    //map.removeLayer(realce);
-  realce = null;
-});
-*/
 // -------------- ler e acarregar os atibutos
 function atributos(feature, layer) {
   counter++;
@@ -161,42 +117,37 @@ function atributos(feature, layer) {
   layer.on({
     click:
       function populate() {
-        var obs = feature.properties["Obs_Vdigit"];
+        var obs = feature.properties.Obs_VDigit;
         if (obs == null) {
-            obs = "--";
-        } else {
-            obs = feature.properties["Obs_Vdigit"]
+          obs = "--";
         }
-        //Aramazena as coordenadas contidas nas propriedades em variáveis para serem aatribuídas ao L.circleMarker
+        //Armazena as coordenadas contidas nas propriedades em variáveis para serem atribuídas ao L.circleMarker
         var lat = feature.geometry.coordinates[1];
         var long = feature.geometry.coordinates[0];
         if (realce == null) {
-            realce = L.circleMarker([lat, long], {
-                "radius": 15,
-                "fillColor": "#9c5f1f",
-                "color": "red",
-                "weight": 1,
-                "opacity": 1
-            }).addTo(map);
+          realce = L.circleMarker([lat, long], {
+            "radius": 15,
+            "fillColor": "#9c5f1f",
+            "color": "red",
+            "weight": 1,
+            "opacity": 1
+          }).addTo(map);
         } else {
-            //se já existir, apenas muda de sítio
-            realce.setLatLng([lat, long]);
+          //se já existir, apenas muda de sítio
+          realce.setLatLng([lat, long]);
         }
-//        sidebar.show();
-        /*document.getElementById('toponimo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "<br>Fólio: " + feature.properties.Folio + "<br><br><b>Topónimos:</b> <br>&nbsp;&nbsp;&nbsp;Códice: " + feature.properties.Top_Orig + "<br>&nbsp;&nbsp;&nbsp;S. Daveau: " + feature.properties.Top_SD + "<br>&nbsp;&nbsp;&nbsp;Atual: " + feature.properties.Top_Atual + "<br><br>Distrito: " + feature.properties.Distrito + "<br>Concelho: " + feature.properties.Concelho + "<br>Freguesia: " + feature.properties.Freguesia + "<br><br>Nota: " + obs;*/
         document.getElementById('topInfo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "&nbsp;&nbsp;&nbsp;Fólio: " + feature.properties.Folio + "</p><p>Topónimos :</p></div>";
         document.getElementById("tablePonto").innerHTML = "<td><p>Códice: " + feature.properties.Top_Orig + "</p><p>S.Daveau: " + feature.properties.Top_SD + "</p><p>Atual: " + feature.properties.Top_Atual + "</p></td><td><p>Distrito: " + feature.properties.Distrito + "</p><p>Concelho: " + feature.properties.Concelho + "</p><p>Freguesia: " + feature.properties.Freguesia + "</p></td>";
-        document.getElementById("botInfo").innerHTML = "<p>Notas: " + obs + "</p>";
+        document.getElementById("botInfo").innerHTML = "<p>Nota: " + obs + "</p>";
 
-
-        //removeLugLayer();
-
-      }
+        var x = document.getElementById("caixaInfo");
+        if (x.style.display === "none") {
+          x.style.display = "block";
+        }
+    }
   });
   dist.push(feature.properties.Distrito);
   conc.push(feature.properties.Concelho);
-  //freg.push(feature.properties.Freguesia);
-  //lugar.push(feature.properties.Freguesia);
 }
 
 function atributos_filter(feature, layer) {
@@ -207,13 +158,11 @@ function atributos_filter(feature, layer) {
   layer.on({
     click:
       function populate() {
-        var obs = feature.properties["Obs_Vdigit"];
-        if (obs == null) {
-          obs = "--";
-        } else {
-          obs = feature.properties["Obs_Vdigit"]
+        var obs = feature.properties.Obs_VDigit;
+         if (obs == null) {
+            obs = "--";
         }
-        //Aramazena as coordenadas contidas nas propriedades em variáveis para serem aatribuídas ao L.circleMarker
+        //Armazena as coordenadas contidas nas propriedades em variáveis para serem aatribuídas ao L.circleMarker
         var lat = feature.geometry.coordinates[1];
         var long = feature.geometry.coordinates[0];
         if (realce == null) {
@@ -225,14 +174,20 @@ function atributos_filter(feature, layer) {
                 "opacity": 1
             }).addTo(map);
         } else {
-            //se já existir, apenas muda de sítio
-            realce.setLatLng([lat, long]);
+          //se já existir, apenas muda de sítio
+          realce.setLatLng([lat, long]);
         }
-        //document.getElementById('toponimo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "<br>Fólio: " + feature.properties.Folio + "<br><br><b>Topónimos:</b> <br>&nbsp;&nbsp;&nbsp;Códice: " + feature.properties.Top_Orig + "<br>&nbsp;&nbsp;&nbsp;S. Daveau: " + feature.properties.Top_SD + "<br>&nbsp;&nbsp;&nbsp;Atual: " + feature.properties.Top_Atual + "<br><br>Distrito: " + feature.properties.Distrito + "<br>Concelho: " + feature.properties.Concelho + "<br>Freguesia: " + feature.properties.Freguesia + "<br><br>Nota: " + obs;
         document.getElementById('topInfo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "&nbsp;&nbsp;&nbsp;Fólio: " + feature.properties.Folio + "</p><p>Topónimos :</p></div>";
         document.getElementById("tablePonto").innerHTML = "<td><p>Códice: " + feature.properties.Top_Orig + "</p><p>S.Daveau: " + feature.properties.Top_SD + "</p><p>Atual: " + feature.properties.Top_Atual + "</p></td><td><p>Distrito: " + feature.properties.Distrito + "</p><p>Concelho: " + feature.properties.Concelho + "</p><p>Freguesia: " + feature.properties.Freguesia + "</p></td>";
-        document.getElementById("botInfo").innerHTML = "<p>Notas: " + obs + "</p>";
-
+        document.getElementById("botInfo").innerHTML = "<p>Nota: " + obs + "</p>";
+        var x = document.getElementById("caixaInfo");
+        if (x.style.display === "none") {
+          x.style.display = "block";
+        }
+        var y = document.getElementById("tabToponimos");
+        if (y.style.display === "none") {
+          y.style.display = "block";
+        }
       }
   });
   dist.push(feature.properties.Distrito);
@@ -247,44 +202,31 @@ function removeLugLayer(){
 }
 
 function selDist() {
+  if (letraSel != null) {
+    document.getElementById('btn' + letraSel).style.background = "none";
+    letraSel=null;
+  }
+
     if (map.hasLayer(lugs)) {
         removeLugLayer();
     }
-    //map.removeLayer(markers);
-/*
+    //Limpa o realce
     if (realce != null) {
         map.removeLayer(realce);
         realce = null;
+        document.getElementById("caixaInfo").style.display = "none";
     }
-*/
-/*
-    if (sidebar.isVisible() == true) {
-        sidebar.hide();
-    }
-*/
   counter = 0;
   //Limpa a tabela antes de atualizar; é feito através do jQuery e remove apenas as linhas, deixando o cabeçalho
   $("#jsoncontent tbody tr").remove();
   miDist = document.getElementById('selbx_dist').value;
   //Esvazia o array dos concelhos para criar uma lista subordinada ao distrito
   conc=[];
-  if (miDist =="Todos") {
+  if (miDist == "Todos") {
     var geojson = L.geoJSON(toponimos, {
       //vai ler os atributos para a tooltip
       onEachFeature: atributos,
       // altera o estilo das marcas
-      //1-Circulo: permite a atribuição do raio em metros e, assim, o raio ajusta-se ao nível do zoom (problema: pode ficar demasiado grande quando se amplia)
-      /*
-      pointToLayer: function(feature, latlng) {
-          return L.circle(latlng, 1000, {
-              fillColor: '#708598',
-              color: '#537898',
-              //radius: 30,
-              weight: 1,
-              fillOpacity: 0.6
-          })
-      }*/
-      //2- Com CircleMarker; o raio é dado em pixeis e permanece fixo, não se ajusta ao zoom
       pointToLayer: function(feature, latlng) {
         return L.circleMarker (latlng, {
           fillColor: 'A9A9A', //'#7FFF00',
@@ -295,17 +237,13 @@ function selDist() {
         })
       }
     }).addTo(map);
-    //Cria a lista de concelhos
+    //Cria a lista de concelhos - com todos os concelhos
     var uniqueNames = [];
     $.each(conc, function (i, el) {
         if ($.inArray(el, uniqueNames) === -1) {
             uniqueNames.push(el);
         }
     });
-
-    /*uniqueNames.sort(function(a, b) {
-        return a.localeCompare(b);
-    });*/
     uniqueNames.sort(Intl.Collator().compare);
     //Esvazia a dropdown
     $(lista_conc).empty();
@@ -322,29 +260,7 @@ function selDist() {
         opt.innerHTML = uniqueNames[i];
         lista_conc.appendChild(opt);
     }
-
   } else {
-    /*
-    var geojson = L.geoJSON(toponimos, {
-      filter: function (feature, layer) {
-        if (miDist != "Todos") {
-          return (feature.properties.Distrito == miDist);
-        } else {
-          return true;
-        }
-      },
-      onEachFeature: atributos_filter, //vai buscar os atributos filtrados pelo distrito seleccionado
-      pointToLayer: function(feature, latlng) {
-        return L.circleMarker (latlng, {
-          fillColor: '#7CFC00', //#8A2B0E',
-          color: '#537898',
-          radius: 4,
-          weight: 1,
-          fillOpacity: 0.6
-        })
-      }
-    }).addTo(map); //cria um novo layer só com o seleccionados, com o ícone default, mas não esconde os outros
-    */
     lugs = L.geoJSON(toponimos, {
       filter: function (feature, layer) {
         if (miDist != "Todos") {
@@ -362,11 +278,7 @@ function selDist() {
             uniqueNames.push(el);
         }
     });
-/*
-    uniqueNames.sort(function(a, b) {
-        return a.localeCompare(b);
-    });
-*/
+
     uniqueNames.sort(Intl.Collator().compare);
 
     //Esvazia a dropdown
@@ -385,22 +297,27 @@ function selDist() {
         lista_conc.appendChild(opt);
     }
   }
-  /*
-  markers = L.markerClusterGroup({
-      showCoverageOnHover: false
-  });
-  markers.addLayer(geojson);
-  map.addLayer(markers);
-  if (lugsel==false){
-      map.fitBounds(markers.getBounds());
-    }*/
+
+  if (document.getElementById('codice').checked == true) {
+    document.getElementById("COD").style.color = "grey";
+    document.getElementById("AT").style.color = "#A52A2A";
+  } else {
+    document.getElementById("COD").style.color = "#A52A2A";
+    document.getElementById("AT").style.color = "grey";
+  }
+  document.getElementById("NO").style.color = "#A52A2A";
+  document.getElementById("SD").style.color = "#A52A2A";
 
   document.getElementById('contador').innerHTML = "Nº de topónimos: " + counter;
   sortTable();
   $("#jsoncontent tr:nth-child(2n)").css("background-color","#f2f2f2");
   //estiloTable();
-
+  var y = document.getElementById("tabToponimos");
+  if (y.style.display === "none") {
+    y.style.display = "block";
+  }
   if (miDist =="Todos") {
+    y.style.display = "none"; //esconde a tabela
     map.fitBounds(geojson.getBounds());
   } else {
     map.addLayer(lugs);
@@ -409,23 +326,20 @@ function selDist() {
 }
 
 function selConc() {
+  if (letraSel != null) {
+    document.getElementById('btn' + letraSel).style.background = "none";
+    letraSel=null;
+  }
 
   if (map.hasLayer(lugs)) {
       removeLugLayer();
   }
-
-  //map.removeLayer(markers);
-/*
+  //Limpa o realce
   if (realce != null) {
       map.removeLayer(realce);
       realce = null;
+      document.getElementById("caixaInfo").style.display = "none";
   }
-*/
-/*
-  if (sidebar.isVisible() == true) {
-      sidebar.hide();
-  }
-*/
   counter = 0;
   //document.getElementById("jsoncontent").innerHTML ="";
   $("#jsoncontent tbody tr").remove();
@@ -461,130 +375,251 @@ function selConc() {
       });
   }
 
+  if (document.getElementById('codice').checked == true) {
+    document.getElementById("COD").style.color = "grey";
+    document.getElementById("AT").style.color = "#A52A2A";
+  } else {
+    document.getElementById("COD").style.color = "#A52A2A";
+    document.getElementById("AT").style.color = "grey";
+  }
+  document.getElementById("NO").style.color = "#A52A2A";
+  document.getElementById("SD").style.color = "#A52A2A";
+
   document.getElementById('contador').innerHTML = "Nº de topónimos: " + counter;
   sortTable();
   $("#jsoncontent tr:nth-child(2n)").css("background-color","#f2f2f2");
-
+  var y = document.getElementById("tabToponimos");
+  if (y.style.display === "none") {
+    y.style.display = "block";
+  }
   if (miDist =="Todos" && miConc == "Todos") {
+    y.style.display = "none"; //esconde a tabela
     map.fitBounds(geojson.getBounds());
   } else {
     map.addLayer(lugs);
     map.fitBounds(lugs.getBounds());
   }
-
-  //map.fitBounds(geojson.getBounds());
-
 }
 
-function selLetra(x){
+function selLetra(n){
+
   if (map.hasLayer(lugs)) {
       removeLugLayer();
+  }
+  //Limpa o realce
+  if (realce != null) {
+      map.removeLayer(realce);
+      realce = null;
+      document.getElementById("caixaInfo").style.display = "none";
   }
   counter = 0;
   $("#jsoncontent tbody tr").remove();
   miConc = document.getElementById('selbx_conc').value;
   miDist = document.getElementById('selbx_dist').value;
+  if (letraSel != null){
+    document.getElementById('btn' + letraSel).style.background = "none";
+  }
+
+  letraSel = n;
+
+  document.getElementById('btn' + letraSel).style.background = "red";
+  //Progress bar pode ir para aqui
 
   if (miDist == "Todos" && miConc == "Todos") {
-    if (x != "C") {
+    if (letraSel != "C") {
       lugs = L.geoJSON(toponimos, {
         filter: function (feature, layer) {
-          if (feature.properties.Top_Orig.charAt(0) == x) return true },
+          if (document.getElementById('codice').checked == true) {
+            document.getElementById("NO").style.color = "#A52A2A";
+            document.getElementById("COD").style.color = "grey";
+            document.getElementById("SD").style.color = "#A52A2A";
+            document.getElementById("AT").style.color = "#A52A2A";
+            if (feature.properties.Top_Orig.charAt(0) == letraSel) return true
+          } else  {
+            if (feature.properties.Top_Atual.charAt(0) == letraSel) return true
+          }
+        },
         onEachFeature: atributos_filter
         });
     } else {
       lugs = L.geoJSON(toponimos, {
         filter: function (feature, layer) {
-          if (feature.properties.Top_Orig.charAt(0) == "C" || feature.properties.Top_Orig.charAt(0) == "Ç") return true },
-          onEachFeature: atributos_filter
-        });
+          if (document.getElementById('codice').checked == true) {
+            if (feature.properties.Top_Orig.charAt(0) == "C" || feature.properties.Top_Orig.charAt(0) == "Ç") return true
+          } else  {
+            if (feature.properties.Top_Atual.charAt(0) == "C" || feature.properties.Top_Atual.charAt(0) == "Ç") return true
+          }
+        },
+        //if (feature.properties.Top_Orig.charAt(0) == "C" || feature.properties.Top_Orig.charAt(0) == "Ç") return true },
+        onEachFeature: atributos_filter
+      });
     }
   } else if (miDist != "Todos" && miConc == "Todos") {
-    if (x != "C") {
+    if (letraSel != "C") {
       lugs = L.geoJSON(toponimos, {
         filter: function (feature, layer) {
-          if ((feature.properties.Distrito == miDist) && (feature.properties.Top_Orig.charAt(0) == x)) return true },
+          if (document.getElementById('codice').checked == true) {
+            if ((feature.properties.Distrito == miDist) && (feature.properties.Top_Orig.charAt(0) == letraSel)) return true
+          } else {
+            if ((feature.properties.Distrito == miDist) && (feature.properties.Top_Atual.charAt(0) == letraSel)) return true
+          }
+        },
         onEachFeature: atributos_filter
         });
     } else {
       lugs = L.geoJSON(toponimos, {
         filter: function (feature, layer) {
-          if ((feature.properties.Distrito == miDist) &&  (feature.properties.Top_Orig.charAt(0) == "C" || feature.properties.Top_Orig.charAt(0) == "Ç")) return true },
+          if (document.getElementById('codice').checked == true) {
+            if ((feature.properties.Distrito == miDist) &&  (feature.properties.Top_Orig.charAt(0) == "C" || feature.properties.Top_Orig.charAt(0) == "Ç")) return true
+          } else {
+            if ((feature.properties.Distrito == miDist) &&  (feature.properties.Top_Atual.charAt(0) == "C" || feature.properties.Top_Atual.charAt(0) == "Ç")) return true
+          }
+        },
         onEachFeature: atributos_filter
       });
     }
   } else if (miConc != "Todos") {
-    if (x != "C") {
+    if (letraSel != "C") {
       lugs = L.geoJSON(toponimos, {
         filter: function (feature, layer) {
-          if ((feature.properties.Concelho == miConc) && (feature.properties.Top_Orig.charAt(0) == x)) return true },
+          if (document.getElementById('codice').checked == true) {
+            if ((feature.properties.Concelho == miConc) && (feature.properties.Top_Orig.charAt(0) == letraSel)) return true
+          } else {
+            if ((feature.properties.Concelho == miConc) && (feature.properties.Top_Atual.charAt(0) == letraSel)) return true
+          }
+        },
         onEachFeature: atributos_filter
         });
     } else {
       lugs = L.geoJSON(toponimos, {
         filter: function (feature, layer) {
-          if ((feature.properties.Concelho == miConc) &&  (feature.properties.Top_Orig.charAt(0) == "C" || feature.properties.Top_Orig.charAt(0) == "Ç")) return true },
+          if (document.getElementById('codice').checked == true) {
+            if ((feature.properties.Concelho == miConc) &&  (feature.properties.Top_Orig.charAt(0) == "C" || feature.properties.Top_Orig.charAt(0) == "Ç")) return true
+          } else {
+            if ((feature.properties.Concelho == miConc) &&  (feature.properties.Top_Atual.charAt(0) == "C" || feature.properties.Top_Atual.charAt(0) == "Ç")) return true
+          }
+        },
         onEachFeature: atributos_filter
       });
     }
   }
+
+  if (document.getElementById('codice').checked == true) {
+    document.getElementById("COD").style.color = "grey";
+    document.getElementById("AT").style.color = "#A52A2A";
+  } else {
+    document.getElementById("COD").style.color = "#A52A2A";
+    document.getElementById("AT").style.color = "grey";
+  }
+  document.getElementById("NO").style.color = "#A52A2A";
+  document.getElementById("SD").style.color = "#A52A2A";
+
+
+
   document.getElementById('contador').innerHTML = "Nº de topónimos: " + counter;
   sortTable();
   $("#jsoncontent tr:nth-child(2n)").css("background-color","#f2f2f2");
-
+  var y = document.getElementById("tabToponimos");
+  if (y.style.display === "none") {
+    y.style.display = "block";
+  }
   map.addLayer(lugs);
   map.fitBounds(lugs.getBounds());
 }
 
+function limpaSelLetra() {
+  //se houver uma letra seleccionada:
+  //muda o estado do botão,
+  //se não houver seleção geográfica
+  //passa o contador a zero, esconde a tabela e remove os lugares seleccionados
+  if (letraSel != null){
+    if (miDist == "Todos" && miConc == "Todos") {
+      if (map.hasLayer(lugs)) {
+          removeLugLayer();
+      }
+      //Limpa o realce
+      if (realce != null) {
+          map.removeLayer(realce);
+          realce = null;
+          document.getElementById("caixaInfo").style.display = "none";
+      }
+
+
+      //Acrescentar o fecho da caixa info; talvez possa incluir no removeluglayer
+      counter = 1383;
+      document.getElementById('contador').innerHTML = "Nº de topónimos: " + counter;
+      document.getElementById("tabToponimos").style.display = "none";
+    } else if (miDist != "Todos" && miConc == "Todos") {
+      //Não faz isto no letra Sel
+      selDist();
+    } else if (miConc != "Todos") {
+      selConc();
+    }
+    document.getElementById('btn' + letraSel).style.background = "none";
+    letraSel=null;
+  }
+  //limpa a variável
+  //letraSel = null;
+}
+
 function linhaSel(x){
   //Limpa os lugares seleccionados
-if (map.hasLayer(lugar)) {
-    map.removeLayer(lugar);
-    //realcelugar = null;
-}
-//Limpa o realce
-if (realce != null) {
-    map.removeLayer(realce);
-    realce = null;
-}
+  if (map.hasLayer(lugar)) {
+      map.removeLayer(lugar);
+      lugar = null;
+  }
+  //Limpa o realce
+  if (realce != null) {
+      map.removeLayer(realce);
+      realce = null;
+  }
   //Número de Ordem
   var nordem = document.getElementById("jsoncontent").rows[x.rowIndex].cells.item(0).innerHTML;
-  lugar = L.geoJSON(toponimos, {
+  var lugar = L.geoJSON(toponimos, {
     filter: function(feature, layer) {
-      if (feature.properties.NO_1 == nordem) return true
+      //if (feature.properties.NO_1 == nordem) return true;
+      return (feature.properties.NO_1 == nordem);
     },
-    pointToLayer: function(feature, latlng){
-    //Cria marcas em todos
-        if (realce == null) {
-            realce = L.circleMarker(latlng, {
-                "radius": 15,
-                "fillColor": "#9c5f1f",
-                "color": "red",
-                "weight": 1,
-                "opacity": 1
-            }).addTo(map);
-        } else {
-            //se já existir, apenas muda de sítio
-            realce.setLatLng(latlng);
-        }
-
+    pointToLayer: function(feature, latlng) {
+      //Cria marcade realce
+      if (realce == null) {
+          realce = L.circleMarker(latlng, {
+              "radius": 15,
+              "fillColor": "#9c5f1f",
+              "color": "red",
+              "weight": 1,
+              "opacity": 1
+          }).addTo(map);
+      } else {
+          //se já existir, apenas muda de sítio
+          realce.setLatLng(latlng);
+      }
+      map.setView(latlng, 14);
+      var obs = feature.properties.Obs_VDigit;
+       if (obs == null) {
+          obs = "--";
+      }
+      document.getElementById('topInfo').innerHTML = "<div>Nº de Ordem: " + feature.properties.NO_1 + "&nbsp;&nbsp;&nbsp;Fólio: " + feature.properties.Folio + "</p><p>Topónimos :</p></div>";
+      document.getElementById("tablePonto").innerHTML = "<td><p>Códice: " + feature.properties.Top_Orig + "</p><p>S.Daveau: " + feature.properties.Top_SD + "</p><p>Atual: " + feature.properties.Top_Atual + "</p></td><td><p>Distrito: " + feature.properties.Distrito + "</p><p>Concelho: " + feature.properties.Concelho + "</p><p>Freguesia: " + feature.properties.Freguesia + "</p></td>";
+      //com as observações já não aparece. Porquê?
+      document.getElementById("botInfo").innerHTML = "<p>Nota: " + obs + "</p>";
+      var cx = document.getElementById("caixaInfo");
+      if (cx.style.display == "none") {
+        cx.style.display = "block";
+      }
     }
   });
-  map.addLayer(lugar);
-  map.fitBounds(lugar.getBounds());
 }
 
-function sortTable() {
+function ordenaCol(col){
+  //document.getElementsByTagName("th").style.color = "#A52A2A";
+  var coluna = col.cellIndex;
   //FONTE: https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_sort_table
   var table, rows, switching, i, x, y, shouldSwitch;
   table = document.getElementById("jsoncontent");
   switching = true;
   /*Make a loop that will continue until
   no switching has been done:*/
-
-  //tentativa
-  //table.sort(Intl.Collator().compare);
-
   while (switching) {
     //start by saying: no switching is done:
     switching = false;
@@ -596,8 +631,94 @@ function sortTable() {
       shouldSwitch = false;
       /*Get the two elements you want to compare,
       one from current row and one from the next:*/
-      x = rows[i].getElementsByTagName("td")[1];
-      y = rows[i + 1].getElementsByTagName("td")[1];
+      if (coluna == 0) {
+        x = rows[i].getElementsByTagName("td")[0];
+        y = rows[i + 1].getElementsByTagName("td")[0];
+        document.getElementById("NO").style.color = "grey";
+        document.getElementById("COD").style.color = "#A52A2A";
+        document.getElementById("SD").style.color = "#A52A2A";
+        document.getElementById("AT").style.color = "#A52A2A";
+      } else if (coluna == 1) {
+        x = rows[i].getElementsByTagName("td")[1];
+        y = rows[i + 1].getElementsByTagName("td")[1];
+        document.getElementById("COD").style.color = "grey";
+        document.getElementById("NO").style.color = "#A52A2A";
+        document.getElementById("SD").style.color = "#A52A2A";
+        document.getElementById("AT").style.color = "#A52A2A";
+
+      } else if (coluna == 2) {
+        x = rows[i].getElementsByTagName("td")[2];
+        y = rows[i + 1].getElementsByTagName("td")[2];
+        document.getElementById("SD").style.color = "grey";
+        document.getElementById("NO").style.color = "#A52A2A";
+        document.getElementById("COD").style.color = "#A52A2A";
+        document.getElementById("AT").style.color = "#A52A2A";
+      } else {
+        x = rows[i].getElementsByTagName("td")[3];
+        y = rows[i + 1].getElementsByTagName("td")[3];
+        document.getElementById("AT").style.color = "grey";
+        document.getElementById("NO").style.color = "#A52A2A";
+        document.getElementById("COD").style.color = "#A52A2A";
+        document.getElementById("SD").style.color = "#A52A2A";
+      }
+
+    //EC: fazer com localCompare para poder ordenar sem ter em conta os acentos
+      var topx = x.innerHTML.toLowerCase();
+      var topy = y.innerHTML.toLowerCase();
+      var result = topx.localeCompare(topy);
+      //alert (result);
+      if (result > 0) {
+        //if so, mark as a switch and break the loop:
+        shouldSwitch = true;
+        break;
+      }
+    }
+    if (shouldSwitch) {
+      /*If a switch has been marked, make the switch
+      and mark that a switch has been done:*/
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+    }
+  }
+}
+
+function fechaInfo() {
+  var cx = document.getElementById("caixaInfo");
+  if (cx.style.display != "none") {
+    cx.style.display = "none";
+  }
+  //Limpa o realce
+  if (realce != null) {
+      map.removeLayer(realce);
+      realce = null;
+  }
+}
+
+function sortTable() {
+  //FONTE: https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_sort_table
+  var table, rows, switching, i, x, y, shouldSwitch;
+  table = document.getElementById("jsoncontent");
+  switching = true;
+  /*Make a loop that will continue until
+  no switching has been done:*/
+  while (switching) {
+    //start by saying: no switching is done:
+    switching = false;
+    rows = table.rows;
+    /*Loop through all table rows (except the
+    first, which contains table headers):*/
+    for (i = 1; i < (rows.length - 1); i++) {
+      //start by saying there should be no switching:
+      shouldSwitch = false;
+      /*Get the two elements you want to compare,
+      one from current row and one from the next:*/
+      if (document.getElementById('codice').checked == true) {
+        x = rows[i].getElementsByTagName("td")[1];
+        y = rows[i + 1].getElementsByTagName("td")[1];
+      } else {
+        x = rows[i].getElementsByTagName("td")[3];
+        y = rows[i + 1].getElementsByTagName("td")[3];
+      }
       //check if the two rows should switch place:
 //      if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
         //if so, mark as a switch and break the loop:
@@ -625,59 +746,8 @@ function sortTable() {
   }
 }
 
-/*
-$( function() {
-    var listaLugares = [];
-    $.each(lugar, function (i, el) {
-        if ($.inArray(el, listaLugares) === -1) {
-            listaLugares.push(el);
-        }
-    });
-    listaLugares.sort(function(a, b) {
-        return a.localeCompare(b);
-    });
-    $( "#lugares" ).autocomplete({
-        minLength: 2,
-        delay: 500,
-        source: listaLugares
-    });
-});
-
-$( "#lugares" ).on( "autocompleteselect", function( event, ui ) {
-    lugarSelect(ui.item.label);
-    ui.item.value='';
-});
-
-function lugarSelect(a){
-    lugsel=true;
-    if (map.hasLayer(lugs)) {
-        removeLugLayer();
-    }
-    if (realce != null) {
-        map.removeLayer(realce);
-        realce = null;
-    }
-    if (document.getElementById('selbox').value != "Todos") {
-        document.getElementById('selbox').value = "Todos";
-        selConc();
-    }
-    if (sidebar.isVisible() == true) {
-        sidebar.hide();
-    }
-    lugs = L.geoJSON(toponimos, {
-        filter: function (feature, layer) {
-            return (feature.properties.Concelho == a);
-        },
-        pointToLayer: function(feature, latlng){
-            return new L.circleMarker(latlng, {
-                "radius": 15,
-                "fillColor": "#9c5f1f",
-                "color": "red",
-                "weight": 1,
-                "opacity": 1
-            });
-        }
-    });
-    map.addLayer(lugs);
-    map.fitBounds(lugs.getBounds());
-}*/
+function fonte() {
+  if (letraSel != null){
+    selLetra(letraSel);
+  }
+}
